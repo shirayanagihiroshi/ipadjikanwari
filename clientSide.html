@@ -313,7 +313,7 @@ table {
         youbiStr = ['日','月','火','水','木','金','土'];
 
 // ****** ローカルで動かすときのダミー。後で消す。******
-/*
+
 let google = {
   script : {
     run : {
@@ -325,8 +325,9 @@ let google = {
                 getCalendarFromDB : function (arg){
                   console.log('getCalendarFromDB dummy called');
                   setTimeout(function () {
-                    let arg = {result:[ [2023, 1, 13, '金', 'A'],
-                                        [2023, 1, 14, '土', 'D'] ] };
+                    let arg = {result:[ [2023, 2, 1, '水', 'A'],
+                                        [2023, 2, 2, '木', 'A'],
+                                        [2023, 2, 3, '金', 'A'] ] };
                     seikouFunc(arg);
                     //shippaiFunc();
                   }, 200)
@@ -370,14 +371,16 @@ let google = {
     }
   }
 }
-*/
+
 
 /* モジュール内ユーティリティ *******************************************************/
 
       const enumEvent = {
         loadDone            : 'loadDone',           // htmlのロード完了
-        sendReceiveDone     : 'sendReceiveDone',    // 通信完了
-        sendReceiveError    : 'sendReceiveError',   // 通信エラー
+        receiveDone         : 'receiveDone',        // データ取得完了
+        receiveError        : 'receiveError',       // データ取得エラー
+        writeDone           : 'writeDone',          // データ書き込み完了
+        writeError          : 'writeError',         // データ書き込みエラー
         userOK              : 'userOK',             // ユーザ操作によるOK
         userCancel          : 'userCancel',         // ユーザ操作によるキャンセル
         userRegister        : 'userRegister',       // ユーザ操作による登録
@@ -391,7 +394,7 @@ let google = {
       let stateMachine = (function () {
         const enumState = {
           none                : 'none',               // 初期状態のみ使用
-          sendAndReceive      : 'sendAndReceive',     // データ送受信中(実際は受信だけ)
+          receiving           : 'receiving',          // データ受信中
           writing             : 'writing',            // データ書き込み中
           jikanwari           : 'jikanwari',          // 時間割表示中
           dialogInputJikawari : 'dialogInputJikawari',// 時間割入力ダイアログ 
@@ -434,15 +437,15 @@ let google = {
                   } else {
                     // 普段はたぶんここに流れる
                     // ここでは画面表示はしなくても自動的に行われている
-                    state = enumState.sendAndReceive;
+                    state = enumState.receiving;
                   }
                   break;
 
                 // calendar内部モジュールの初期化時にデータ取得は開始している
-                case enumEvent.sendReceiveDone:
+                case enumEvent.receiveDone:
                   firstTimeDataGet = 1;
                   break;
-                case enumEvent.sendReceiveError:
+                case enumEvent.receiveError:
                   firstTimeDataGet = 2;
                   break;
 
@@ -452,15 +455,15 @@ let google = {
               }
               break;
 
-            case enumState.sendAndReceive:     // データ送受信中
+            case enumState.receiving:     // データ受信中
               switch(e.type) {
-                case enumEvent.sendReceiveDone:
+                case enumEvent.receiveDone:
                   dialogOff('tuushintyuu'); // 通信中ダイアログを除去
                   setNaiyou();      // 取得した時間割の内容を画面に表示
                   setModal(false);  // 操作を受け付ける
                   state = enumState.jikanwari;
                   break;
-                case enumEvent.sendReceiveError:
+                case enumEvent.receiveError:
                   dialogOff('tuushintyuu'); // 通信中ダイアログを除去
                   dialogOn('tuushinError'); // 通信中エラーダイアログを表示
                   state = enumState.dialogError;
@@ -473,11 +476,11 @@ let google = {
 
             case enumState.writing:     // データ書き込み中
               switch(e.type) {
-                case enumEvent.sendReceiveDone:
+                case enumEvent.writeDone:
                   setDayAndGetNaiyou();
-                  state = enumState.sendAndReceive;
+                  state = enumState.receiving;
                   break;
-                case enumEvent.sendReceiveError:
+                case enumEvent.writeError:
                   dialogOff('tuushintyuu'); // 通信中ダイアログを除去
                   dialogOn('tuushinError'); // 通信中エラーダイアログを表示
                   state = enumState.dialogError;
@@ -495,21 +498,21 @@ let google = {
                   setDayTitle();
                   dialogOn('tuushintyuu');
                   setModal(true);
-                  state = enumState.sendAndReceive;
+                  state = enumState.receiving;
                   break;
                 case enumEvent.userToday:
                   setDayAndGetNaiyou('today');
                   setDayTitle();
                   dialogOn('tuushintyuu');
                   setModal(true);
-                  state = enumState.sendAndReceive;
+                  state = enumState.receiving;
                   break;
                 case enumEvent.userNextDay:
                   setDayAndGetNaiyou('NextDay');
                   setDayTitle();
                   dialogOn('tuushintyuu');
                   setModal(true);
-                  state = enumState.sendAndReceive;
+                  state = enumState.receiving;
                   break;
                 case enumEvent.userInputNaiyou:
                   setInputNaiyou(e.detail.para1);
@@ -712,14 +715,14 @@ let google = {
           }).withFailureHandler(function(arg){
             // 失敗時の処理
             if (logout) {console.log("getJikanwariFromDB failure")};
-            stateMachine.dispatchInnerEvent(enumEvent.sendReceiveError);
+            stateMachine.dispatchInnerEvent(enumEvent.receiveError);
 
           }).getJikanwariFromDB();
 
         }).withFailureHandler(function(arg){
           // 失敗時の処理
           if (logout) {console.log("getCalendarFromDB failure")};
-          stateMachine.dispatchInnerEvent(enumEvent.sendReceiveError);
+          stateMachine.dispatchInnerEvent(enumEvent.receiveError);
 
         }).getCalendarFromDB();
 
@@ -943,13 +946,13 @@ let google = {
             console.log("getNaiyou success");
             console.log(arg.res);
           }
-          stateMachine.dispatchInnerEvent(enumEvent.sendReceiveDone);
+          stateMachine.dispatchInnerEvent(enumEvent.receiveDone);
 
         }).withFailureHandler(function(arg){
           // 失敗時の処理
           if (logout) {console.log("getNaiyou failure")};
 
-          stateMachine.dispatchInnerEvent(enumEvent.sendReceiveError);
+          stateMachine.dispatchInnerEvent(enumEvent.receiveError);
 
         }).getNaiyouFromDB(year, month, day);
       }
@@ -982,11 +985,11 @@ let google = {
 
         google.script.run.withSuccessHandler(function(arg){
           // 成功時の処理
-          stateMachine.dispatchInnerEvent(enumEvent.sendReceiveDone);
+          stateMachine.dispatchInnerEvent(enumEvent.writeDone);
 
         }).withFailureHandler(function(arg){
           // 失敗時の処理
-          stateMachine.dispatchInnerEvent(enumEvent.sendReceiveError);
+          stateMachine.dispatchInnerEvent(enumEvent.writeError);
 
         }).putNaiyouToDB(d.year, d.month, d.day, koma, kamoku, naiyou, motimono);
       }
