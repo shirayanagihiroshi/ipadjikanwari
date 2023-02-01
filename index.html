@@ -8,10 +8,15 @@
         width:60%;
       }
 
+      body {
+        background-color:#cccccc; /*ページ全体の背景色*/
+      }
+
       .daiji {
         color: red;
         font-weight : bold;
       }
+
     </style>
 
     <title>ipad時間割ReadMe</title>
@@ -95,8 +100,29 @@
 
     <h1 id="design">4.設計編</h1>
     <p>
+      機能の大部分はクライアント側(clientSide.html)に持たせている。サーバ側(serverSide.js)はクライアントの要求を受けて、データの返却や保持をするのみである。
+    </p>
+    <p>
+      クライアント側のjavascriptのコード上の色々な箇所にアプリケーションが動く契機がある。そこにそのまま処理を書くと読みにくいので、アプリケーションの状態を管理する内部モジュール(stateMachine)を用意した。各契機ではstateMachineにイベントを投げるだけにして、stateMachineがイベントを受けたところが動作の起点となる。(起動時など例外はある。) stateMachineはcase文が長くてダサくてごめんね。
+    </p>
+    <p>
+      stateMachineの主な状態遷移は以下。
+      <div class="mermaid">
+        flowchart TD
+          A([初期状態]) --データの取得開始--> B([データ受信中])
+          B --データ受信完了--> C([時間割表示中])
+          C --表示する日を移動--> B
+          C --時間割をタップ--> D([入力ダイアログ])
+          D --OK--> E([データ書き込み中])
+          E --データの取得開始--> B
+          D --削除する--> F([削除確認画面])
+          F --削除する-->E
+      </div>
+    </p>
+    <p>
+      以下に大まかなシークエンスを示す。
       <ul>
-        <li>起動
+        <li>起動し、時間割が表示されるまで
           <div class="mermaid">
             sequenceDiagram
               participant u  as ユーザ
@@ -113,7 +139,7 @@
               cal->>sv: getCalendarFromDB
               sv->>ssCal: スプレッドシート読み込み
               b->>b: window.onload(読み込み完了)
-              b->>sm: loadDoneイベント
+              b->>sm: loadDoneイベント(通信中ダイアログが表示される)
               ssCal->>sv: カレンダー情報返却
               sv->>cal: カレンダー情報返却
               cal->>sv: getJikanwariFromDB
@@ -124,8 +150,9 @@
               sv->>ssDat: スプレッドシート読み込み
               ssDat->>sv: 書き込み内容返却
               sv->>cal: 書き込み内容返却
-              cal->>b:sendReceiveDoneイベント
-              b->>sm:sendReceiveDoneイベント
+              cal->>b:receiveDoneイベント
+              b->>sm:receiveDoneイベント
+              sm->>b:通信中ダイアログを消し、内容を表示
           </div>
         </li>
       </ul>
