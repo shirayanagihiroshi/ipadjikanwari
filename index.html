@@ -26,74 +26,109 @@
       <li><a href="#design">設計編</a></li>
     </ol>
     <h1 id="overview">1.概要</h1>
-      <p>ipadで時間割を入力、閲覧することができる仕組みについて説明する。</p>
-      <p>これはwebサービスである。学級毎に決められたURLにブラウザでアクセスすることで時間割を見られる。ipadでの利用を想定しデザインしているが、PCやスマートフォンからもアクセスはできる。</p>
-      <p>機能を提供する側も閲覧する側もGoogle Workspaceのアカウントが必要であり、学校から割り振られているものを使う。担任がwebサービスを用意し、学級の生徒がそれを利用するイメージである。</p>
-      <p>教育機関はWorkspaceを無料で利用できるというのに乗っかってこれを作ったが、Google App Script(以下GAS)には1日の処理回数の制限があり、あまり大きなシステムを作るものではないっぽいというのと、ユーザ操作の簡素化の観点から、とりあえず学級単位での実施とする。</p>
-      <p>生徒が入力したデータは担任の先生のGoogle Driveのスプレッドシートに入力される。(これをデータベース代わりに使っている。)生徒が上書きや削除をすると、以前の内容が見られなくなることはあるが、データとしては削除しない。先生がスプレッドシートを見れば誰が何を書いたのかを辿れる。</p>
+    <p>ipadで時間割を入力、閲覧することができる仕組みについて説明する。</p>
+    <p>これはwebサービスである。学級毎に決められたURLにブラウザでアクセスすることで時間割を見られる。ipadでの利用を想定しデザインしているが、PCやスマートフォンからもアクセスはできる。</p>
+    <p>機能を提供する側も閲覧する側もGoogle Workspaceのアカウントが必要であり、学校から割り振られているものを使う。担任がwebサービスを用意し、学級の生徒がそれを利用するイメージである。</p>
+    <p>教育機関はWorkspaceを無料で利用できるというのに乗っかってこれを作ったが、Google App Script(以下GAS)には1日の処理回数の制限があり、あまり大きなシステムを作るものではないっぽいというのと、ユーザ操作の簡素化の観点から、とりあえず学級単位での実施とする。</p>
+    <p>生徒が入力したデータは担任の先生のGoogle Driveのスプレッドシートに入力される。(これをデータベース代わりに使っている。)生徒が上書きや削除をすると、以前の内容が見られなくなることはあるが、データとしては削除しない。先生がスプレッドシートを見れば誰が何を書いたのかを辿れる。</p>
 
     <h1 id="howToUse">2.使い方編</h1>
       <p></p>
     <h1 id="env">3.開発環境構築編</h1>
-      <p>機能としてはGoogle Driveにスプレッドシートを用意し、GASを動かすだけであるが、ソースコードの管理にgit、claspを使う。claspはnode.jsのパッケージであるため、まずはgitとnode.jsをインストールする。(インストーラをダウンロードし実行する。手順は割愛。)</p>
-      <p><a href="https://script.google.com/home/usersettings">https://script.google.com/home/usersettings</a>からGoogle Apps Script APIをオンにする。(初期値はオフ)</p>
-      <p>コマンドプロンプトで以下を実行する。</p>
-      <p>手順1:claspのインストール</p>
-      <p><pre class="prettyprint">
-        npm install @google/clasp -g
-      </pre></p>
-      <p>手順2:適当なフォルダを作成し、そこへ移動する</p>
-      <p><pre class="prettyprint">
-        mkdir ipadjikanwari
+    <p>機能としてはGoogle Driveにスプレッドシートを用意し、GASを動かすだけであるが、ソースコードの管理にgit、claspを使う。claspはnode.jsのパッケージであるため、まずはgitとnode.jsをインストールする。(インストーラをダウンロードし実行する。手順は割愛。)</p>
+    <p><a href="https://script.google.com/home/usersettings">https://script.google.com/home/usersettings</a>からGoogle Apps Script APIをオンにする。(初期値はオフ)</p>
+    <p>コマンドプロンプトで以下を実行する。</p>
+    <p>手順1:claspのインストール</p>
+    <p><pre class="prettyprint">
+      npm install @google/clasp -g
+    </pre></p>
+    <p>手順2:適当なフォルダを作成し、そこへ移動する</p>
+    <p><pre class="prettyprint">
+      mkdir ipadjikanwari
 
-        cd ipadjikanwari
-      </pre></p>
-      <p>手順3:claspのログイン</p>
-      <p><pre class="prettyprint">
-        clasp login
-      </pre></p>
-      <p>自動的にブラウザが起動し学校支給のアカウントでログインすると、下のようなダイアログが表示されるので、ダイアログ下部の許可ボタンを押す。</p>
-      <p><img src="images/env1.png"></p>
-      <p>成功すれば、ブラウザには「Logged in! You may close this page. 」とコマンドプロンプトには「Authorization successful.Default credentials saved to:...」と表示される。</p>
-      <p>手順4:webapp(時間割)のプロジェクトの作成</p>
-      <p><pre class="prettyprint">
-        clasp create ipadjikanwari
-      </pre></p>
-      <p>そのあと、どの種類のプロジェクトを作るのかの選択が表示されるので、webappを選ぶ。</p>
-      <p>ここで、.clasp.jsonとappsscript.jsonが生成されているはずだが、のちの手順の邪魔になるので、appsscript.jsonのみ削除する。</p>
-      <p>手順5:gitでソースファイルを取得する</p>
-      <p><pre class="prettyprint">
-        git init
+      cd ipadjikanwari
+    </pre></p>
+    <p>手順3:claspのログイン</p>
+    <p><pre class="prettyprint">
+      clasp login
+    </pre></p>
+    <p>自動的にブラウザが起動し学校支給のアカウントでログインすると、下のようなダイアログが表示されるので、ダイアログ下部の許可ボタンを押す。</p>
+    <p><img src="images/env1.png"></p>
+    <p>成功すれば、ブラウザには「Logged in! You may close this page. 」とコマンドプロンプトには「Authorization successful.Default credentials saved to:...」と表示される。</p>
+    <p>手順4:webapp(時間割)のプロジェクトの作成</p>
+    <p><pre class="prettyprint">
+      clasp create ipadjikanwari
+    </pre></p>
+    <p>そのあと、どの種類のプロジェクトを作るのかの選択が表示されるので、webappを選ぶ。</p>
+    <p>ここで、.clasp.jsonとappsscript.jsonが生成されているはずだが、のちの手順の邪魔になるので、appsscript.jsonのみ削除する。</p>
+    <p>手順5:gitでソースファイルを取得する</p>
+    <p><pre class="prettyprint">
+      git init
 
-        git remote add origin https://github.com/shirayanagihiroshi/ipadjikanwari.git
+      git remote add origin https://github.com/shirayanagihiroshi/ipadjikanwari.git
 
-        git pull origin master --allow-unrelated-histories
-      </pre></p>
-      <p>手順6:スプレッドシートを準備</p>
-      <p>メールでスプレッドシートを受け取る。(送る人は送りたいスプレッドシートを開いて、URLをコピーする。例：「https://docs.google.com/spreadsheets/d/1x68-VDZnMaANSqv6-0RLgYQHLXInTjZCVTX23fjGEDg/edit#gid=233561905」この中のeditをcopyに変更し、メール本文にはりつけて送ると、受け取った人は下記のような画面が表示される。コピーを作成ボタンを押すことで該当ファイルがドライブにコピーされる。</p>
-      <p><img src="images/env2.png"></p>
-      <p>これを開いて、画面右上の共有ボタンを押し、下記の一般的なアクセスを「制限付き」から「〇〇学校」に変更し、さらに役割を「閲覧者」から「編集者」に変更する。また、jikanwariシートの時間割を実際のものに修正する。</p>
-      <p><img src="images/env4.png"></p>
-      <p>手順7:スプレッドシートのIDをコピーする。</p>
-      <p>受け取ったスプレッドシートを開いたときのURLの、下記の部分をコピーする。</p>
-      <p><img src="images/env3.png"></p>
-      <p>手順8:ソースファイルの編集</p>
-      <p>sheetIds.jsをテキストエディタで開く。</p>
-      <p><pre class="prettyprint">
-        const sheetId = '';
-      </pre></p>
-      <p>を編集し</p>
-      <p><pre class="prettyprint">
-        const sheetId = '手順7で確認したスプレッドシートのID';
-      </pre></p>
-      <p>とする。同じファイルのcalendarSheetIdの方も編集するが、こちらはのスプレッドシートは学校で誰かが代表して作ればよいので、そのIDを確認して入力する。</p>
-      <p>手順9:ファイルをプロジェクトへ登録</p>
-      <p><pre class="prettyprint">
-        clasp push
-      </pre></p>
-      <p>「Manifest file has been updated. Do you want to push and overwrite?」と聞かれたらyと答える。</p>
+      git pull origin master --allow-unrelated-histories
+    </pre></p>
+    <p>手順6:スプレッドシートを準備</p>
+    <p>メールでスプレッドシートを受け取る。(送る人は送りたいスプレッドシートを開いて、URLをコピーする。例：「https://docs.google.com/spreadsheets/d/1x68-VDZnMaANSqv6-0RLgYQHLXInTjZCVTX23fjGEDg/edit#gid=233561905」この中のeditをcopyに変更し、メール本文にはりつけて送ると、受け取った人は下記のような画面が表示される。コピーを作成ボタンを押すことで該当ファイルがドライブにコピーされる。</p>
+    <p><img src="images/env2.png"></p>
+    <p>これを開いて、画面右上の共有ボタンを押し、下記の一般的なアクセスを「制限付き」から「〇〇学校」に変更し、さらに役割を「閲覧者」から「編集者」に変更する。また、jikanwariシートの時間割を実際のものに修正する。</p>
+    <p><img src="images/env4.png"></p>
+    <p>手順7:スプレッドシートのIDをコピーする。</p>
+    <p>受け取ったスプレッドシートを開いたときのURLの、下記の部分をコピーする。</p>
+    <p><img src="images/env3.png"></p>
+    <p>手順8:ソースファイルの編集</p>
+    <p>sheetIds.jsをテキストエディタで開く。</p>
+    <p><pre class="prettyprint">
+      const sheetId = '';
+    </pre></p>
+    <p>を編集し</p>
+    <p><pre class="prettyprint">
+      const sheetId = '手順7で確認したスプレッドシートのID';
+    </pre></p>
+    <p>とする。同じファイルのcalendarSheetIdの方も編集するが、こちらはのスプレッドシートは学校で誰かが代表して作ればよいので、そのIDを確認して入力する。</p>
+    <p>手順9:ファイルをプロジェクトへ登録</p>
+    <p><pre class="prettyprint">
+      clasp push
+    </pre></p>
+    <p>「Manifest file has been updated. Do you want to push and overwrite?」と聞かれたらyと答える。</p>
 
     <h1 id="design">4.設計編</h1>
-      <p></p>
+    <p>
+      <ul>
+        <li>起動
+          <div class="mermaid">
+            sequenceDiagram
+              participant u  as ユーザ
+              participant b  as ブラウザ
+              participant sm as stateMachine(javascript)
+              participant cal as カレンダー(javascript)
+              participant sv as サーバ(serverSide.js)
+              participant ssCal as カレンダー(spreadSheet)
+              participant ssDat as データ(spreadSheet)
+              u->>b: 該当URLにアクセス
+              b->>sv: get
+              sv->>b: clientSide.htmlを送る
+              b->>cal: 初期化
+              cal->>sv: getCalendarFromDB
+              sv->>ssCal: スプレッドシート読み込み
+              b->>b: window.onload(読み込み完了)
+              b->>sm: loadDoneイベント
+              ssCal->>sv: カレンダー情報返却
+              sv->>cal: カレンダー情報返却
+              cal->>sv: getJikanwariFromDB
+              sv->>ssDat: スプレッドシート読み込み
+              ssDat->>sv: デフォルトの時間割情報返却
+              sv->>cal: デフォルトの時間割情報返却
+              cal->>sv: getNaiyouFromDB
+              sv->>ssDat: スプレッドシート読み込み
+              ssDat->>sv: 書き込み内容返却
+              sv->>cal: 書き込み内容返却
+              cal->>b:sendReceiveDoneイベント
+              b->>sm:sendReceiveDoneイベント
+          </div>
+        </li>
+      </ul>
+    </p>
   </body>
 </html>

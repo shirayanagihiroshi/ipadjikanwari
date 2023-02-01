@@ -408,7 +408,7 @@ let google = {
         // 状態遷移はここに集約して管理する
         function engine(e) {
           if (logout) {
-            console.log('** engine event **');
+            console.log('** engine event (state:' + state + ') **');
             console.log(e.type + ':' + e.detail.para1 + ':' + e.detail.para2);
           }
 
@@ -424,7 +424,7 @@ let google = {
                     setNaiyou();
                     setModal(false);
                     state = enumState.jikanwari;
-                  
+
                   } else if (firstTimeDataGet == 2) {
 
                     dialogOff('tuushintyuu');
@@ -440,10 +440,10 @@ let google = {
 
                 // calendar内部モジュールの初期化時にデータ取得は開始している
                 case enumEvent.sendReceiveDone:
-                  firstTimeDataGet == 1;
+                  firstTimeDataGet = 1;
                   break;
                 case enumEvent.sendReceiveError:
-                  firstTimeDataGet == 2;
+                  firstTimeDataGet = 2;
                   break;
 
                 default:
