@@ -9,11 +9,11 @@
       }
 
       body {
-        background-color:#cccccc; /*ページ全体の背景色*/
+        background-color:#8fbc8f; /*ページ全体の背景色*/
       }
 
-      .daiji {
-        color: red;
+      .string {
+        color: #dc143c;
         font-weight : bold;
       }
 
@@ -38,35 +38,56 @@
     <p>生徒が入力したデータは担任の先生のGoogle Driveのスプレッドシートに入力される。(これをデータベース代わりに使っている。)生徒が上書きや削除をすると、以前の内容が見られなくなることはあるが、データとしては削除しない。先生がスプレッドシートを見れば誰が何を書いたのかを辿れる。</p>
 
     <h1 id="howToUse">2.使い方編</h1>
-      <p></p>
+    <p>基本の使い方：該当のURLにアクセスすると、自動的にデータの取得を開始し</p>
+    <p><img src="images/howToUse1.png"></p>
+    <p>データの取得が完了すると、時間割が表示される。</p>
+    <p><img src="images/howToUse2.png"></p>
+    <p>例えば3時間目の内容や持ち物を入力したい場合このへんをタップする。</p>
+    <p><img src="images/howToUse3.png"></p>
+    <p>入力用のダイアログが表示され</p>
+    <p><img src="images/howToUse4.png"></p>
+    <p>内容、持ち物を入力し登録ボタンをタップすると</p>
+    <p><img src="images/howToUse5.png"></p>
+    <p>書き込み中の画面を経て</p>
+    <p><img src="images/howToUse1.png"></p>
+    <p>さきほど入力した内容が登録されたことが分かる。</p>
+    <p><img src="images/howToUse6.png"></p>
+    <p>
+      <ul>
+        <li>内容or持ち物のどちらかだけでも登録はできる。</li>
+        <li>教科も上書きすれば上書きされる</li>
+        <li>前の日へや次の日へをタップすればその日の分になる</li>
+        <li>登録済の分も上書きすれば上書きされる</li>
+      </ul>
+    </p>
     <h1 id="env">3.開発環境構築編</h1>
     <p>機能としてはGoogle Driveにスプレッドシートを用意し、GASを動かすだけであるが、ソースコードの管理にgit、claspを使う。claspはnode.jsのパッケージであるため、まずはgitとnode.jsをインストールする。(インストーラをダウンロードし実行する。手順は割愛。)</p>
-    <p><a href="https://script.google.com/home/usersettings">https://script.google.com/home/usersettings</a>からGoogle Apps Script APIをオンにする。(初期値はオフ)</p>
+    <p>手順1:<a href="https://script.google.com/home/usersettings">https://script.google.com/home/usersettings</a>からGoogle Apps Script APIをオンにする。(初期値はオフ)</p>
     <p>コマンドプロンプトで以下を実行する。</p>
-    <p>手順1:claspのインストール</p>
+    <p>手順2:claspのインストール</p>
     <p><pre class="prettyprint">
       npm install @google/clasp -g
     </pre></p>
-    <p>手順2:適当なフォルダを作成し、そこへ移動する</p>
+    <p>手順3:適当なフォルダを作成し、そこへ移動する</p>
     <p><pre class="prettyprint">
       mkdir ipadjikanwari
 
       cd ipadjikanwari
     </pre></p>
-    <p>手順3:claspのログイン</p>
+    <p>手順4:claspのログイン</p>
     <p><pre class="prettyprint">
       clasp login
     </pre></p>
     <p>自動的にブラウザが起動し学校支給のアカウントでログインすると、下のようなダイアログが表示されるので、ダイアログ下部の許可ボタンを押す。</p>
     <p><img src="images/env1.png"></p>
     <p>成功すれば、ブラウザには「Logged in! You may close this page. 」とコマンドプロンプトには「Authorization successful.Default credentials saved to:...」と表示される。</p>
-    <p>手順4:webapp(時間割)のプロジェクトの作成</p>
+    <p>手順5:webapp(時間割)のプロジェクトの作成</p>
     <p><pre class="prettyprint">
       clasp create ipadjikanwari
     </pre></p>
     <p>そのあと、どの種類のプロジェクトを作るのかの選択が表示されるので、webappを選ぶ。</p>
     <p>ここで、.clasp.jsonとappsscript.jsonが生成されているはずだが、のちの手順の邪魔になるので、appsscript.jsonのみ削除する。</p>
-    <p>手順5:gitでソースファイルを取得する</p>
+    <p>手順6:gitでソースファイルを取得する</p>
     <p><pre class="prettyprint">
       git init
 
@@ -74,15 +95,19 @@
 
       git pull origin master --allow-unrelated-histories
     </pre></p>
-    <p>手順6:スプレッドシートを準備</p>
+    <p>手順7:スプレッドシートを準備</p>
     <p>メールでスプレッドシートを受け取る。(送る人は送りたいスプレッドシートを開いて、URLをコピーする。例：「https://docs.google.com/spreadsheets/d/1x68-VDZnMaANSqv6-0RLgYQHLXInTjZCVTX23fjGEDg/edit#gid=233561905」この中のeditをcopyに変更し、メール本文にはりつけて送ると、受け取った人は下記のような画面が表示される。コピーを作成ボタンを押すことで該当ファイルがドライブにコピーされる。</p>
     <p><img src="images/env2.png"></p>
-    <p>これを開いて、画面右上の共有ボタンを押し、下記の一般的なアクセスを「制限付き」から「〇〇学校」に変更し、さらに役割を「閲覧者」から「編集者」に変更する。また、jikanwariシートの時間割を実際のものに修正する。</p>
+    <p>これを開いて、画面右上の共有ボタンを押し、下記の一般的なアクセスを「制限付き」から「〇〇学校」に変更する。</p>
     <p><img src="images/env4.png"></p>
-    <p>手順7:スプレッドシートのIDをコピーする。</p>
+    <p><span class="string">さらに役割を「閲覧者」から「編集者」に変更する</span>。さらに,「ファイル」->「共有」から「webに公開」する。(これによりアクセスが早くなる・・・らしい)</p>
+    <p>手順7´:スプレッドシートのjikanwariシートの内容を実際のものに修正する。</p>
+    <p><img src="images/env5.png"></p>
+    <p>スプレッドシートの</p>
+    <p>手順8:スプレッドシートのIDをコピーする。</p>
     <p>受け取ったスプレッドシートを開いたときのURLの、下記の部分をコピーする。</p>
     <p><img src="images/env3.png"></p>
-    <p>手順8:ソースファイルの編集</p>
+    <p>手順9:ソースファイルの編集</p>
     <p>sheetIds.jsをテキストエディタで開く。</p>
     <p><pre class="prettyprint">
       const sheetId = '';
@@ -92,7 +117,7 @@
       const sheetId = '手順7で確認したスプレッドシートのID';
     </pre></p>
     <p>とする。同じファイルのcalendarSheetIdの方も編集するが、こちらはのスプレッドシートは学校で誰かが代表して作ればよいので、そのIDを確認して入力する。</p>
-    <p>手順9:ファイルをプロジェクトへ登録</p>
+    <p>手順10:ファイルをプロジェクトへ登録</p>
     <p><pre class="prettyprint">
       clasp push
     </pre></p>
@@ -100,10 +125,10 @@
 
     <h1 id="design">4.設計編</h1>
     <p>
-      機能の大部分はクライアント側(clientSide.html)に持たせている。サーバ側(serverSide.js)はクライアントの要求を受けて、データの返却や保持をするのみである。
+      機能の大部分はクライアント側(clientSide.html)のjavascriptに持たせている。サーバ側(serverSide.js)はクライアントの要求を受けて、データの返却や保持をするのみである。
     </p>
     <p>
-      クライアント側のjavascriptのコード上の色々な箇所にアプリケーションが動く契機がある。そこにそのまま処理を書くと読みにくいので、アプリケーションの状態を管理する内部モジュール(stateMachine)を用意した。各契機ではstateMachineにイベントを投げるだけにして、stateMachineがイベントを受けたところが動作の起点となる。(起動時など例外はある。) stateMachineはcase文が長くてダサくてごめんね。
+      クライアント側のjavascriptのコード上の色々な箇所にアプリケーションが動く契機がある。そこにそのまま処理を書くと読みにくいので、アプリケーションの状態を管理する内部モジュール(stateMachine)を用意した。各契機ではstateMachineにイベントを投げるだけにして、stateMachineがイベントを受けたところが動作の起点となる。(起動時など例外はある。) stateMachineはcase文が長くてダサい。ごめんね。
     </p>
     <p>
       stateMachineの主な状態遷移は以下。
@@ -122,7 +147,7 @@
     <p>
       以下に大まかなシークエンスを示す。
       <ul>
-        <li>起動し、時間割が表示されるまで
+        <li>起動して時間割が表示されるまで
           <div class="mermaid">
             sequenceDiagram
               participant u  as ユーザ
@@ -153,6 +178,27 @@
               cal->>b:receiveDoneイベント
               b->>sm:receiveDoneイベント
               sm->>b:通信中ダイアログを消し、内容を表示
+          </div>
+        </li>
+        <li>次の日へをタップした時の処理
+          <div class="mermaid">
+            sequenceDiagram
+              participant u  as ユーザ
+              participant b  as ブラウザ
+              participant sm as stateMachine(javascript)
+              participant sv as サーバ(serverSide.js)
+              participant ssDat as データ(spreadSheet)
+              participant u  as ユーザ
+              u->>b:タップ
+              b->>sm:NextDayイベント
+              sm->>b:通信中ダイアログ表示
+              sm->>sv:getNaiyou
+              sv->>ssDat:スプレッドシート読み込み
+              ssDat->>sv:書き込み内容返却
+              sv->>b:書き込み内容返却
+              b->>sm:receiveDoneイベント
+              sm->>b:通信中ダイアログを消し、内容を表示
+
           </div>
         </li>
       </ul>
